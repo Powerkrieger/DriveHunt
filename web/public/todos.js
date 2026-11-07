@@ -8,26 +8,12 @@
   window.Todos = Todos;
   let button;
 
-  Todos.init = async function () {
-    // Editor-only feature: viewers never see the control or load the list.
-    if (state.me.role !== 'editor') return;
-    new (L.Control.extend({
-      options: { position: 'topleft' },
-      onAdd() {
-        const bar = L.DomUtil.create('div', 'leaflet-bar todo-control');
-        button = L.DomUtil.create('a', '', bar);
-        button.href = '#';
-        button.title = 'Aufgaben';
-        button.textContent = '📋';
-        L.DomEvent.disableClickPropagation(bar);
-        L.DomEvent.on(button, 'click', (e) => {
-          L.DomEvent.preventDefault(e);
-          open();
-        });
-        return bar;
-      },
-    }))().addTo(map);
+  // Opened from the settings page (⚙ → Aufgaben).
+  Todos.open = () => open();
 
+  Todos.init = async function () {
+    // Editor-only feature: viewers never load the list.
+    if (state.me.role !== 'editor') return;
     $('todos-close').addEventListener('click', close);
     $('todos').addEventListener('click', (e) => {
       if (e.target.id === 'todos') close(); // click on the backdrop

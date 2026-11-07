@@ -76,6 +76,7 @@
         current.sim = { ...DEFAULTS.sim }; save(current); fillSim(); Settings.applySimDefaults();
       });
 
+      $('set-todos')?.addEventListener('click', () => { close(); window.Todos?.open?.(); });
       $('pw-form').addEventListener('submit', changePassword);
       $('set-offline-dl').addEventListener('click', downloadTiles);
       $('set-offline-clear').addEventListener('click', clearTiles);

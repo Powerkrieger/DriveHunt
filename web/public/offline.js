@@ -61,78 +61,12 @@
     return { total, failed, cancelled: cancelled() };
   }
 
-  // Shared with the settings page (⚙ → Offline-Karten), so the download logic
-  // lives in one place and the map's ⤓ control stays a quick shortcut.
+  // Offline map download lives in the settings page (⚙ → Offline-Karten); this
+  // module exposes the shared download logic and the service-worker registration.
   window.Offline = {
     townBounds: () => (typeof boundaryLayer !== 'undefined' && boundaryLayer ? boundaryLayer.getBounds() : map.getBounds()),
     tileCount: (bounds) => tileUrls(bounds).length,
     zoomRange: [ZMIN, ZMAX],
     download, // (bounds, onProgress, cancelled) -> { total, failed, cancelled }
   };
-
-  const OfflineControl = L.Control.extend({
-    options: { position: 'topleft' },
-    onAdd() {
-      // Outer box holds the button-bar and the panel as siblings, so the
-      // leaflet-bar border wraps only the button (not the whole panel).
-      const box = L.DomUtil.create('div', 'offline-control');
-      const bar = L.DomUtil.create('div', 'leaflet-bar', box);
-      const button = L.DomUtil.create('a', '', bar);
-      button.href = '#';
-      button.title = 'Offline-Karte laden';
-      button.textContent = '⤓';
-      let running = false, cancel = false;
-
-      const panel = L.DomUtil.create('div', 'offline-panel hidden', box);
-      L.DomEvent.disableClickPropagation(box);
-      L.DomEvent.disableScrollPropagation(box);
-
-      const show = (html) => { panel.innerHTML = html; panel.classList.remove('hidden'); };
-      const hide = () => panel.classList.add('hidden');
-
-      L.DomEvent.on(button, 'click', (e) => {
-        L.DomEvent.preventDefault(e);
-        if (running) { cancel = true; return; }
-        const bounds = (typeof boundaryLayer !== 'undefined' && boundaryLayer) ? boundaryLayer.getBounds() : map.getBounds();
-        const count = tileUrls(bounds).length;
-        show(
-          `<p>Karte für die Jagd offline speichern?</p>` +
-          `<p class="muted">Högel · Zoom ${ZMIN}–${ZMAX} · OSM + Luftbild Esri · ca. ${count} Kacheln</p>` +
-          `<div class="row"><button class="go primary">Laden</button><button class="no">Abbrechen</button></div>`
-        );
-        panel.querySelector('.no').onclick = hide;
-        panel.querySelector('.go').onclick = async () => {
-          running = true; cancel = false;
-          button.classList.add('active');
-          try {
-            const r = await download(bounds, (d, t, f) => {
-              show(`<p>Lade Kacheln… <strong>${d}/${t}</strong>${f ? ` (${f} fehlgeschlagen)` : ''}</p>` +
-                `<div class="row"><button class="no">Stopp</button></div>`);
-              panel.querySelector('.no').onclick = () => { cancel = true; };
-            }, () => cancel);
-            show(
-              (r.cancelled ? `<p>Abgebrochen.</p>` : `<p>✓ Offline-Karte gespeichert.</p>`) +
-              `<p class="muted">${r.total - r.failed}/${r.total} Kacheln${r.failed ? `, ${r.failed} fehlgeschlagen` : ''}. ` +
-              `Daten (Felder, Treiben, Marker) werden beim letzten Online-Besuch gespeichert.</p>` +
-              `<div class="row"><button class="no">Schließen</button></div>`
-            );
-            panel.querySelector('.no').onclick = hide;
-          } catch (err) {
-            show(`<p class="error">${err.message}</p><div class="row"><button class="no">Schließen</button></div>`);
-            panel.querySelector('.no').onclick = hide;
-          } finally {
-            running = false; cancel = false;
-            button.classList.remove('active');
-          }
-        };
-      });
-      return box;
-    },
-  });
-
-  const wait = setInterval(() => {
-    if (typeof map === 'undefined' || !map) return;
-    clearInterval(wait);
-    new OfflineControl().addTo(map);
-  }, 200);
 })();

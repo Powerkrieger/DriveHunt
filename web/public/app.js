@@ -401,10 +401,17 @@ const totalHa = (h) => h.field_ids.reduce((s, id) => s + (state.fieldGeom.has(id
 function setView(view) {
   state.view = view;
   for (const v of ['list', 'focus', 'edit', 'fields']) $(`${v}-view`).classList.toggle('hidden', v !== view);
-  // On phones the full Treiben list shouldn't cover the map/bottom; keep it
-  // collapsed (header only) and only open up for the working views.
-  const mobile = window.matchMedia('(max-width: 700px)').matches;
-  $('panel').classList.toggle('collapsed', mobile && view === 'list');
+}
+
+// The Treiben panel is opened on demand from the 📋 button; it slides in from
+// the right (bottom sheet on phones). Any view that needs it opens it.
+function openPanel() {
+  $('panel').classList.add('open');
+  $('treiben-open').classList.add('hidden');
+}
+function closePanel() {
+  $('panel').classList.remove('open');
+  $('treiben-open').classList.remove('hidden');
 }
 
 function fitFields(fieldIds) {
@@ -423,6 +430,7 @@ function fitFields(fieldIds) {
 function showList() {
   stopSim();
   state.focusId = null;
+  openPanel();
   setView('list');
   render();
 }
@@ -432,6 +440,7 @@ function showFocus(id, fit = true) {
   if (!h) return showList();
   const keepSim = state.focusId === id && state.sim;
   state.focusId = id;
+  openPanel();
   setView('focus');
   render();
   $('focus-title').innerHTML = `<span class="badge" style="background:${h.color}">${h.seq}</span> ${esc(h.name)}`;
@@ -449,7 +458,9 @@ function showFocus(id, fit = true) {
 }
 
 $('focus-back').addEventListener('click', showList);
-$('panel-toggle').addEventListener('click', () => $('panel').classList.toggle('collapsed'));
+$('panel-close').addEventListener('click', closePanel);
+// 📋 opens the Treiben list; if the panel was left on another view, show the list.
+$('treiben-open').addEventListener('click', () => { openPanel(); if (state.view !== 'list') showList(); });
 
 // ---------------------------------------------------------------- editing
 
@@ -469,6 +480,7 @@ $('focus-delete').addEventListener('click', async () => {
 function startEdit(draft) {
   stopSim();
   state.draft = draft;
+  openPanel();
   setView('edit');
   $('edit-title').textContent = draft.id ? 'Treiben bearbeiten' : 'Neues Treiben';
   $('edit-seq').value = draft.seq;

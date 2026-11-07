@@ -61,6 +61,12 @@
           <button id="set-logout" class="danger">Abmelden</button>
         </section>
 
+        <section class="set-group editor-only">
+          <h3>Aufgaben</h3>
+          <p class="hint">Gemeinsame Aufgabenliste für die Jagd.</p>
+          <button id="set-todos">📋 Aufgabenliste öffnen</button>
+        </section>
+
         <section class="set-group">
           <h3>Karte</h3>
           <label>Standard-Hintergrundkarte
@@ -114,13 +120,17 @@
   <div id="app" class="hidden">
     <div id="map"></div>
 
+    <button id="settings-open" class="fab fab-settings" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+    <button id="treiben-open" class="fab fab-treiben" title="Treiben anzeigen">
+      <span class="fab-ic">📋</span><span class="fab-label">Treiben</span>
+    </button>
+
     <aside id="panel">
       <header>
+        <button id="panel-close" class="icon" title="Schließen">✕</button>
         <strong>Treiben</strong>
-        <span class="spacer"></span>
         <span id="whoami" class="muted"></span>
-        <button id="settings-open" class="icon" title="Einstellungen">⚙</button>
-        <button id="panel-toggle" class="icon" title="Liste ein-/ausblenden">☰</button>
+        <span class="spacer"></span>
       </header>
 
       <div id="panel-body">

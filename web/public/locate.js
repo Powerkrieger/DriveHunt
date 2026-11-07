@@ -116,6 +116,7 @@
     if (state.view === 'edit') return $('edit-cancel').click(), true;
     if (state.view === 'fields') return $('fields-back').click(), true;
     if (state.view === 'focus') return showList(), true;
+    if ($('panel').classList.contains('open')) return closePanel(), true;
     return false;
   };
 })();
