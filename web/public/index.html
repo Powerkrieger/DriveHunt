@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Drückjagd Högel</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#2f3b2f" />
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="/vendor/geoman/leaflet-geoman.css" />
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <div id="login" class="overlay hidden">
+    <form id="login-form" class="card">
+      <h1>Drückjagd Högel</h1>
+      <input name="username" placeholder="Benutzername" autocomplete="username" autocapitalize="none" required />
+      <input name="password" type="password" placeholder="Passwort" autocomplete="current-password" required />
+      <button type="submit">Anmelden</button>
+      <p id="login-error" class="error"></p>
+    </form>
+  </div>
+
+  <div id="todos" class="overlay hidden">
+    <div class="card todo-card">
+      <header class="todo-head">
+        <strong>Aufgaben</strong>
+        <span class="spacer"></span>
+        <button id="todos-close" class="icon" title="Schließen">✕</button>
+      </header>
+      <div id="todo-list"></div>
+      <p id="todo-empty" class="muted hidden">Noch keine Aufgaben. Mit „+ Neue Aufgabe" anfangen.</p>
+      <button id="todo-add" class="primary">+ Neue Aufgabe</button>
+      <p id="todos-error" class="error"></p>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay hidden">
+    <div class="card settings-card">
+      <header class="modal-head">
+        <strong>Einstellungen</strong>
+        <span class="spacer"></span>
+        <button id="settings-close" class="icon" title="Schließen">✕</button>
+      </header>
+
+      <div class="settings-body">
+        <section class="set-group">
+          <h3>Konto</h3>
+          <p class="set-account"><span id="set-user"></span><span id="set-role" class="role-badge"></span></p>
+          <details class="set-pw">
+            <summary>Passwort ändern</summary>
+            <form id="pw-form">
+              <label>Aktuelles Passwort <input id="pw-old" type="password" autocomplete="current-password" required /></label>
+              <label>Neues Passwort <input id="pw-new" type="password" autocomplete="new-password" minlength="6" required /></label>
+              <label>Wiederholen <input id="pw-new2" type="password" autocomplete="new-password" required /></label>
+              <div class="row"><button type="submit" class="primary">Passwort speichern</button></div>
+              <p id="pw-msg" class="msg"></p>
+            </form>
+          </details>
+          <button id="set-logout" class="danger">Abmelden</button>
+        </section>
+
+        <section class="set-group">
+          <h3>Karte</h3>
+          <label>Standard-Hintergrundkarte
+            <select id="set-basemap">
+              <option value="osm">OpenStreetMap</option>
+              <option value="dop">Luftbild SH (DOP20)</option>
+              <option value="esri">Luftbild Esri</option>
+            </select>
+          </label>
+          <p class="hint">Diese Karte wird beim nächsten Öffnen der App angezeigt.</p>
+        </section>
+
+        <section class="set-group">
+          <h3>Simulation – Standardwerte</h3>
+          <p class="hint">Vorgaben für neue Treiben und die Simulation.</p>
+          <div class="grid">
+            <label>Treiber <input id="set-sim-drivers" type="number" min="1" max="100" /></label>
+            <label>Schützen <input id="set-sim-standers" type="number" min="0" max="50" /></label>
+            <label>Flanke m <input id="set-sim-flank" type="number" min="0" max="200" step="10" /></label>
+            <label>Tempo km/h <input id="set-sim-speed" type="number" min="1" max="6" step="0.5" /></label>
+            <label>Max. km/h <input id="set-sim-maxspeed" type="number" min="2" max="7" step="0.5" /></label>
+            <label>Schützen km/h <input id="set-sim-standerspeed" type="number" min="0.5" max="5" step="0.5" /></label>
+          </div>
+          <button id="set-sim-reset" class="link">Auf Standard zurücksetzen</button>
+        </section>
+
+        <section class="set-group">
+          <h3>Darstellung</h3>
+          <label>Design
+            <select id="set-theme">
+              <option value="system">Automatisch (Gerät)</option>
+              <option value="light">Hell</option>
+              <option value="dark">Dunkel</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="set-group">
+          <h3>Offline-Karten</h3>
+          <p id="set-offline-stats" class="muted">Wird geladen…</p>
+          <div class="row">
+            <button id="set-offline-dl" class="primary">Karten für Högel laden</button>
+            <button id="set-offline-clear" class="danger">Gespeicherte Karten löschen</button>
+          </div>
+          <p id="set-offline-msg" class="msg"></p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div id="map"></div>
+
+    <aside id="panel">
+      <header>
+        <strong>Treiben</strong>
+        <span class="spacer"></span>
+        <span id="whoami" class="muted"></span>
+        <button id="settings-open" class="icon" title="Einstellungen">⚙</button>
+        <button id="panel-toggle" class="icon" title="Liste ein-/ausblenden">☰</button>
+      </header>
+
+      <div id="panel-body">
+        <!-- list view -->
+        <section id="list-view">
+          <ol id="hunt-list"></ol>
+          <div class="row editor-only">
+            <button id="new-hunt">+ Neues Treiben</button>
+            <button id="edit-fields">✎ Felder bearbeiten</button>
+          </div>
+        </section>
+
+        <!-- focus / simulation view -->
+        <section id="focus-view" class="hidden">
+          <button id="focus-back" class="link">← Alle Treiben</button>
+          <h2 id="focus-title"></h2>
+          <p id="focus-notes" class="notes"></p>
+          <p id="focus-info" class="muted"></p>
+          <div class="editor-only row">
+            <button id="focus-edit">Bearbeiten</button>
+            <button id="focus-delete" class="danger">Löschen</button>
+          </div>
+
+          <h3>Simulation</h3>
+          <div id="sim-missing" class="muted hidden">Für die Simulation braucht das Treiben einen Pfeil (Treibrichtung).</div>
+          <div id="sim-controls">
+            <p id="sim-setup-info" class="hint hidden"></p>
+            <div class="grid">
+              <div id="sim-auto-params" class="grid" style="grid-column: 1 / -1">
+                <label>Treiber <input id="sim-drivers" type="number" min="1" max="60" value="12" /></label>
+                <label>Schützen <input id="sim-standers" type="number" min="0" max="30" value="4" /></label>
+                <label>Flanke m <input id="sim-flank" type="number" min="0" max="200" step="10" value="40" /></label>
+              </div>
+              <label>Tempo km/h <input id="sim-speed" type="number" min="1" max="6" step="0.5" value="3" /></label>
+              <label title="Schneller geht niemand, auch nicht beim Aufschließen oder Umstellen">Max. km/h <input id="sim-maxspeed" type="number" min="2" max="7" step="0.5" value="5" /></label>
+              <label title="Die Schützenlinie geht meist langsam entgegen">Schützen km/h <input id="sim-standerspeed" type="number" min="0.5" max="5" step="0.5" value="1.5" /></label>
+            </div>
+            <div class="row">
+              <button id="sim-play">▶ Start</button>
+              <select id="sim-rate" title="Zeitraffer">
+                <option value="10">10×</option>
+                <option value="30" selected>30×</option>
+                <option value="60">60×</option>
+                <option value="120">120×</option>
+              </select>
+            </div>
+            <input id="sim-scrub" type="range" min="0" max="1000" value="0" />
+            <p id="sim-status" class="muted"></p>
+            <p id="sim-duration" class="hint"></p>
+            <label class="check"><input id="sim-tracks" type="checkbox" /> Spuren anzeigen</label>
+            <p class="legend">
+              <span class="dot driver"></span> Treiber
+              <span class="dot flank"></span> Flanke
+              <span class="dot stander"></span> Schützen
+            </p>
+          </div>
+        </section>
+
+        <!-- field editing view -->
+        <section id="fields-view" class="hidden">
+          <button id="fields-back" class="link">← Fertig</button>
+          <h2>Felder bearbeiten</h2>
+          <p class="hint">Tipp: oben links „Luftbild SH“ als Karte wählen. Felder antippen, um sie auszuwählen.</p>
+          <p><strong id="fsel-count">0</strong> ausgewählt <button id="fsel-clear" class="link">Auswahl aufheben</button></p>
+          <p id="fsel-info" class="muted"></p>
+          <div id="fsel-name-row" class="hidden">
+            <div class="grid">
+              <label>Name <input id="fsel-name" placeholder="optional" maxlength="100" /></label>
+              <label>Art
+                <select id="fsel-type">
+                  <option value="farmland">Acker</option>
+                  <option value="meadow">Grünland</option>
+                  <option value="forest">Wald</option>
+                  <option value="scrub">Gebüsch</option>
+                  <option value="water">Gewässer</option>
+                  <option value="other">Sonstige Fläche</option>
+                </select>
+              </label>
+            </div>
+            <button id="fsel-name-save">Übernehmen</button>
+          </div>
+          <div id="ftools" class="tools">
+            <button id="ftool-draw">＋ Neues Feld zeichnen</button>
+            <button id="ftool-split">✂ Teilen</button>
+            <button id="ftool-edit">✎ Form ändern</button>
+            <button id="ftool-merge">⧉ Zusammenfügen</button>
+            <button id="ftool-delete" class="danger">🗑 Löschen</button>
+          </div>
+          <p id="fields-error" class="error"></p>
+        </section>
+
+        <!-- edit view -->
+        <section id="edit-view" class="hidden">
+          <h2 id="edit-title">Treiben bearbeiten</h2>
+          <div class="grid">
+            <label>Nr. <input id="edit-seq" type="number" min="0" max="999" /></label>
+            <label>Farbe <input id="edit-color" type="color" /></label>
+          </div>
+          <label>Name <input id="edit-name" maxlength="100" /></label>
+          <label>Notizen <textarea id="edit-notes" rows="3" maxlength="2000"></textarea></label>
+          <p class="hint">Felder auf der Karte antippen, um sie hinzuzufügen oder zu entfernen.<br />
+            <strong id="edit-count">0</strong> Felder ausgewählt.</p>
+          <div class="row">
+            <button id="edit-arrow">Pfeil zeichnen</button>
+            <button id="edit-arrow-clear" class="link">Pfeil entfernen</button>
+          </div>
+          <h3>Aufstellung <small class="muted">(optional)</small></h3>
+          <div class="grid">
+            <label>Treiber <input id="setup-ndrivers" type="number" min="1" max="100" value="12" /></label>
+            <label>Schützen <input id="setup-nstanders" type="number" min="0" max="50" value="4" /></label>
+          </div>
+          <div class="tools">
+            <button id="setup-auto">⚙ Automatisch aufstellen</button>
+            <button id="setup-draw-drivers">Treiberlinie zeichnen</button>
+            <button id="setup-draw-standers">Schützenlinie zeichnen</button>
+            <button id="setup-clear" class="danger">Aufstellung löschen</button>
+          </div>
+          <p id="setup-info" class="hint"></p>
+          <div class="row">
+            <button id="edit-save" class="primary">Speichern</button>
+            <button id="edit-cancel">Abbrechen</button>
+          </div>
+          <p id="edit-error" class="error"></p>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/vendor/geoman/leaflet-geoman.min.js"></script>
+  <script src="/vendor/polygon-clipping/polygon-clipping.umd.min.js"></script>
+  <script src="/sim.js"></script>
+  <script src="/geometry.js"></script>
+  <script src="/app.js"></script>
+  <script src="/settings.js"></script>
+  <script src="/sketch.js"></script>
+  <script src="/markers.js"></script>
+  <script src="/todos.js"></script>
+  <script src="/measure.js"></script>
+  <script src="/locate.js"></script>
+  <script src="/fields-edit.js"></script>
+  <script src="/offline.js"></script>
+</body>
+</html>

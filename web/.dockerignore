@@ -1,0 +1,4 @@
+node_modules
+data/drivehunt.db*
+data/session.secret
+README.md

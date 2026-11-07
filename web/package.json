@@ -1,0 +1,22 @@
+{
+  "name": "drivehunt-web",
+  "description": "Dr\u00fcckjagd-Planung H\u00f6gel",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "import-osm": "node scripts/import-osm.js",
+    "user": "node --disable-warning=ExperimentalWarning scripts/user.js",
+    "import-feldbloecke": "node --disable-warning=ExperimentalWarning scripts/import-feldbloecke.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@geoman-io/leaflet-geoman-free": "^2.20.2",
+    "express": "^5.2.1",
+    "leaflet": "^1.9.4",
+    "polygon-clipping": "^0.15.7"
+  },
+  "devDependencies": {
+    "osmtogeojson": "^3.0.0-beta.5"
+  },
+  "private": true
+}

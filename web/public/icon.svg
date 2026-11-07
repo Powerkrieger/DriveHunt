@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Drückjagd Högel: field, drive direction, line of drivers with flanks ahead -->
+  <rect width="108" height="108" rx="22" fill="#2f3b2f"/>
+  <path d="M24 30 L84 24 L87 82 L21 86 Z" fill="#5d9c45"/>
+  <path d="M24 30 L84 24 L85 44 L23 50 Z" fill="#78b85a"/>
+  <path d="M54 64 L54 42" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <path d="M54 26 L43 44 L65 44 Z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  <g fill="#ff9800" stroke="#2f3b2f" stroke-width="2">
+    <circle cx="31" cy="64" r="5"/>
+    <circle cx="42" cy="71" r="5"/>
+    <circle cx="54" cy="74" r="5"/>
+    <circle cx="66" cy="71" r="5"/>
+    <circle cx="77" cy="64" r="5"/>
+  </g>
+</svg>

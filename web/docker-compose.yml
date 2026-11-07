@@ -1,0 +1,17 @@
+# Production setup on powerserver: Caddy (in its own compose project) reaches
+# this container over the shared external "web" network as drivehunt:8080.
+services:
+  drivehunt:
+    build: .
+    restart: unless-stopped
+    environment:
+      COOKIE_SECURE: "1"        # served via HTTPS by Caddy
+      TRUST_PROXY: uniquelocal  # Caddy connects from a private Docker IP
+    volumes:
+      - ./data:/data
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
