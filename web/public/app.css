@@ -203,6 +203,10 @@ label.check input { width: auto; }
 .marker-popup .row, .marker-form .row { margin: 6px 0 0; }
 .marker-popup p.notes { margin: 6px 0; }
 .marker-form label { margin: 4px 0; }
+/* marker create/edit form as a centred modal on phones */
+.marker-modal { background: rgba(20, 26, 20, 0.55); padding: 16px; }
+.marker-modal-card { width: min(360px, 94vw); max-height: 90vh; overflow-y: auto; padding: 18px; gap: 8px; }
+.marker-modal-title { font-size: 17px; }
 
 /* todos (Aufgaben) */
 .todo-control a { font-size: 18px; line-height: 30px; text-align: center; text-decoration: none; }

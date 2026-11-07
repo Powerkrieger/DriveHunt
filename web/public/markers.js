@@ -118,7 +118,9 @@
     return div;
   }
 
-  // Create (no id) or edit a marker in a popup form.
+  // Create (no id) or edit a marker. On desktop the form opens in a popup
+  // anchored to the marker; on phones an anchored bubble is cramped and sits
+  // off to the side, so there it opens as a centred modal instead.
   function openForm(m) {
     const div = L.DomUtil.create('div', 'marker-form');
     div.innerHTML = `
@@ -132,18 +134,11 @@
     div.querySelector('[name=label]').value = m.label || '';
     div.querySelector('[name=note]').value = m.note || '';
     L.DomEvent.disableClickPropagation(div);
-    const popup = L.popup({
-      minWidth: 240,
-      maxHeight: Math.round(window.innerHeight * 0.6),
-      closeOnClick: false,
-      autoPan: true,
-      keepInView: true,
-      autoPanPaddingTopLeft: [12, 70], // clear the top-left controls
-      autoPanPaddingBottomRight: [12, 24],
-    }).setLatLng([m.lat, m.lng]).setContent(div).openOn(map);
+
+    const close = showForm(div, m);
     L.DomEvent.on(div, 'click', async (e) => {
       const act = e.target.dataset?.act;
-      if (act === 'cancel') map.closePopup(popup);
+      if (act === 'cancel') return close();
       if (act !== 'save') return;
       const body = {
         lat: m.lat,
@@ -154,11 +149,38 @@
       };
       try {
         await (m.id ? api('PUT', `/api/markers/${m.id}`, body) : api('POST', '/api/markers', body));
-        map.closePopup(popup);
+        close();
         await Markers.reload();
       } catch (err) {
         div.querySelector('.error').textContent = err.message;
       }
     });
+  }
+
+  // Place the form; returns a close() for the chosen container (modal / popup).
+  function showForm(div, m) {
+    if (window.matchMedia('(max-width: 700px)').matches) {
+      const overlay = L.DomUtil.create('div', 'overlay marker-modal', document.body);
+      const card = L.DomUtil.create('div', 'card marker-modal-card', overlay);
+      const head = L.DomUtil.create('strong', 'marker-modal-title', card);
+      head.textContent = m.id ? 'Markierung bearbeiten' : 'Neue Markierung';
+      card.appendChild(div);
+      const close = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => e.key === 'Escape' && close();
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      document.addEventListener('keydown', onKey);
+      div.querySelector('[name=label]').focus();
+      return close;
+    }
+    const popup = L.popup({
+      minWidth: 240,
+      maxHeight: Math.round(window.innerHeight * 0.6),
+      closeOnClick: false,
+      autoPan: true,
+      keepInView: true,
+      autoPanPaddingTopLeft: [12, 70], // clear the top-left controls
+      autoPanPaddingBottomRight: [12, 24],
+    }).setLatLng([m.lat, m.lng]).setContent(div).openOn(map);
+    return () => map.closePopup(popup);
   }
 })();
