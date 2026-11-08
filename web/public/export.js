@@ -14,6 +14,7 @@
 
   let active = false, orientation = 'portrait';
   let frame, bar; // on-screen viewfinder elements (frame dims the rest via box-shadow)
+  let opts = { all: false, numbers: true, setup: false }; // what the preview/print shows
 
   const el = (tag, cls, parent) => {
     const e = document.createElement(tag);
@@ -28,12 +29,14 @@
     if (!huntById(state.focusId)) return;
     active = true;
     orientation = 'portrait';
+    opts = { all: false, numbers: true, setup: false };
     document.body.classList.add('exporting');
     closePanel();
 
     frame = el('div', 'a4-frame', document.body);
     buildBar();
     layout();
+    setExportMode(opts); // turn the main map into a live preview
     window.addEventListener('resize', layout);
     document.addEventListener('keydown', onKey);
   };
@@ -46,7 +49,9 @@
     document.removeEventListener('keydown', onKey);
     frame?.remove(); bar?.remove();
     frame = bar = null;
-    openPanel();
+    setExportMode(null); // leave preview mode
+    const h = huntById(state.focusId);
+    if (h) showFocus(h.id, false); else showList(); // restore the normal view
   };
 
   const onKey = (e) => {
@@ -63,6 +68,7 @@
       </div>
       <label class="check"><input type="checkbox" id="a4-all"> Alle Treiben</label>
       <label class="check"><input type="checkbox" id="a4-nums" checked> Nummern</label>
+      <label class="check"><input type="checkbox" id="a4-setup"> Aufstellung</label>
       <span class="a4-spacer"></span>
       <button type="button" id="a4-go" class="primary">Als PDF drucken</button>
       <button type="button" id="a4-cancel">Abbrechen</button>`;
@@ -73,6 +79,11 @@
         layout();
       })
     );
+    const sync = () => {
+      opts = { all: $('a4-all').checked, numbers: $('a4-nums').checked, setup: $('a4-setup').checked };
+      setExportMode(opts); // live-update the preview
+    };
+    ['a4-all', 'a4-nums', 'a4-setup'].forEach((id) => $(id).addEventListener('change', sync));
     $('a4-go').addEventListener('click', doExport);
     $('a4-cancel').addEventListener('click', Export.stop);
   }
@@ -110,8 +121,7 @@
   async function doExport() {
     if (!active) return;
     const bounds = frameBounds();
-    const showAll = $('a4-all').checked;
-    const showNums = $('a4-nums').checked;
+    const showAll = opts.all, showNums = opts.numbers;
     const focusHunt = huntById(state.focusId);
     const hunts = showAll ? state.hunts : [focusHunt].filter(Boolean);
 
@@ -167,6 +177,7 @@
         const pos = labelPosition(h.field_ids);
         if (pos) labelMarker(pos, h.seq, h.color).addTo(pmap);
       }
+      if (opts.setup) setupPreviewLayers(h).forEach((l) => l.addTo(pmap));
     }
 
     const ready = tilesReady(base);

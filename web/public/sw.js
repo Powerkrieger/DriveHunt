@@ -13,7 +13,7 @@
  *  - /api/events (SSE) and every non-GET request are never touched.
  */
 
-const SHELL = 'dh-shell-v6';
+const SHELL = 'dh-shell-v7';
 const DATA = 'dh-data-v1';
 const TILES = 'dh-tiles-v1';
 const KEEP = new Set([SHELL, DATA, TILES]);

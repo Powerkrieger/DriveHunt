@@ -31,6 +31,7 @@ const state = {
 
 let map, layersControl, fieldsGroup, boundaryLayer, overlayLayer, simLayer, setupLayer, arrowEditLayer;
 let baseLayers = null; // { osm, dop, esri } — current base tile layers
+let exportOpts = null; // when set, the main map is an A4-export preview (see export.js)
 
 // Switch the visible base map (used by the settings default + live switching).
 function setBaseMap(key) {
@@ -278,9 +279,74 @@ function labelMarker(pos, text, color) {
 // ---------------------------------------------------------------- rendering
 
 function render() {
+  if (exportOpts) return renderExportPreview();
   renderFields();
   renderOverlays();
   renderList();
+}
+
+// ---- A4 export live preview --------------------------------------------------
+// While the export frame is up, the main map is a WYSIWYG preview driven by the
+// export options, so what you frame is what the PDF shows. export.js sets the
+// options via setExportMode(); print uses the same options.
+function setExportMode(opts) {
+  exportOpts = opts;
+  if (opts) render();
+}
+
+// Driver chain + driver/stander dots at the start of the drive (the simulation's
+// initial positions). Shared by the preview and the print map. [] if not drivable.
+function setupPreviewLayers(h) {
+  if (!h.arrow) return [];
+  const geoms = h.field_ids.map((id) => state.fieldGeom.get(id)).filter(Boolean);
+  if (!geoms.length) return [];
+  const s0 = DriveSim.createSimulation(h.arrow, geoms, simParams(), h.setup).stateAt(0);
+  const layers = [
+    L.polyline(s0.drivers.map((d) => d.pos), { color: '#ff9800', weight: 2, dashArray: '6 6', interactive: false }),
+    L.polyline(s0.standers.map((d) => d.pos), { color: '#1565c0', weight: 2, dashArray: '6 6', interactive: false }),
+  ];
+  for (const d of s0.drivers)
+    layers.push(L.circleMarker(d.pos, { radius: 5, color: '#fff', weight: 2, fillColor: d.flank ? '#e91e63' : '#ff9800', fillOpacity: 1, interactive: false }));
+  for (const d of s0.standers)
+    layers.push(L.circleMarker(d.pos, { radius: 6, color: '#fff', weight: 2, fillColor: '#1565c0', fillOpacity: 1, interactive: false }));
+  return layers;
+}
+
+function renderExportPreview() {
+  const opts = exportOpts;
+  const focus = huntById(state.focusId);
+  const hunts = opts.all ? state.hunts : [focus].filter(Boolean);
+  const firstHunt = new Map();
+  if (opts.all) for (const h of state.hunts) for (const id of h.field_ids) if (!firstHunt.has(id)) firstHunt.set(id, h);
+
+  for (const [id, layer] of state.fieldLayers) {
+    const [base, bo] = typeStyle(layer.feature.properties.landuse);
+    let style;
+    if (opts.all) {
+      const h = firstHunt.get(id);
+      style = h
+        ? { color: h.color, weight: 2, fillColor: h.color, fillOpacity: 0.5, dashArray: null }
+        : { color: base, weight: 1, fillColor: base, fillOpacity: bo, dashArray: null };
+    } else {
+      style = focus && focus.field_ids.includes(id)
+        ? { color: '#000', weight: 2, fillColor: focus.color, fillOpacity: 0.45, dashArray: null }
+        : { color: base, weight: 1, fillColor: base, fillOpacity: bo * 0.5, dashArray: null };
+    }
+    layer.setStyle(style);
+  }
+
+  overlayLayer.clearLayers();
+  arrowEditLayer.clearLayers();
+  setupLayer.clearLayers();
+  simLayer.clearLayers();
+  for (const h of hunts) {
+    if (h.arrow) arrowLayers(h.arrow, h.color).forEach((l) => l.addTo(overlayLayer));
+    if (opts.numbers) {
+      const pos = labelPosition(h.field_ids);
+      if (pos) labelMarker(pos, h.seq, h.color).addTo(overlayLayer);
+    }
+    if (opts.setup) setupPreviewLayers(h).forEach((l) => l.addTo(simLayer));
+  }
 }
 
 function renderFields() {
@@ -595,6 +661,7 @@ $('setup-clear').addEventListener('click', () => {
 });
 
 function onFieldClick(id) {
+  if (exportOpts) return; // frozen as an export preview
   if (window.Measure?.active || window.Sketch?.active || window.Markers?.placing) return; // taps belong to the tool
   if (state.view === 'fields') return window.FieldEdit.onFieldClick(id);
   if (state.view === 'edit') {
