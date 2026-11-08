@@ -13,14 +13,14 @@
  *  - /api/events (SSE) and every non-GET request are never touched.
  */
 
-const SHELL = 'dh-shell-v5';
+const SHELL = 'dh-shell-v6';
 const DATA = 'dh-data-v1';
 const TILES = 'dh-tiles-v1';
 const KEEP = new Set([SHELL, DATA, TILES]);
 
 const SHELL_ASSETS = [
   '/', '/index.html',
-  '/app.css', '/app.js', '/settings.js', '/sim.js', '/geometry.js', '/sketch.js',
+  '/app.css', '/app.js', '/settings.js', '/export.js', '/sim.js', '/geometry.js', '/sketch.js',
   '/markers.js', '/todos.js', '/measure.js', '/locate.js', '/fields-edit.js', '/offline.js',
   '/icon.svg', '/manifest.webmanifest',
   '/vendor/leaflet/leaflet.css', '/vendor/leaflet/leaflet.js',

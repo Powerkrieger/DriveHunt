@@ -20,6 +20,12 @@ Live: https://hunting.powerizzle.de
 - **Markers** (📌, all users): meeting point, stand, parking, danger, game seen, other – with label and note. Own markers
   (editors: all) can be dragged, edited and deleted; everyone sees them live. Toggle via the layer control.
 - **Measuring tool** (📏, all users): distances per segment and total, area from 3 points.
+- **A4 export** (🖨 in a focused Treiben, all users): an export mode shows an A4-proportioned
+  viewfinder frame on the map; pan/zoom to frame the area, pick Hoch-/Querformat, and optionally
+  show all drives and/or hide the number badges. „Als PDF drucken" renders a dedicated A4-sized map
+  of exactly that frame and opens the browser print dialog (Save as PDF or print). Uses DOM tiles +
+  SVG overlays (`public/export.js`), so no canvas/cross-origin issues; raster tiles print at screen
+  resolution.
 - **Settings** (⚙ in the panel header, all users): own account + password change; default base map; default
   simulation values (prefill new drives / the sim panel); light/dark/auto theme; and offline-map management
   (download Högel, show/clear the cached tiles). Preferences are per-device (localStorage); only the password

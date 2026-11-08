@@ -245,6 +245,40 @@ label.check input { width: auto; }
 .todo-text { min-width: 0; }
 .todo-del { font-size: 16px; }
 
+/* A4 export (PDF) */
+body.exporting .fab { display: none !important; }
+.a4-frame {
+  position: fixed; z-index: 1160; pointer-events: none; border: 2px dashed #fff; border-radius: 2px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .45), 0 0 0 1px rgba(0, 0, 0, .55) inset;
+}
+.a4-bar {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 1170;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  background: var(--bg); color: var(--text); border-radius: 12px; box-shadow: var(--shadow);
+  padding: 8px 12px; max-width: calc(100vw - 16px);
+}
+.a4-bar .a4-spacer { flex: 1; min-width: 2px; }
+.a4-bar .check { white-space: nowrap; margin: 0; }
+.a4-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.a4-seg button { border: none; border-radius: 0; background: var(--bg); color: var(--text); padding: 7px 12px; }
+.a4-seg button.active { background: var(--primary); color: var(--primary-ink); }
+
+/* off-screen A4 render — shown only to the printer */
+.a4-print-area { position: fixed; left: -10000px; top: 0; }
+.a4-print-page { position: relative; background: #fff; overflow: hidden; }
+.a4-print-page.portrait { width: 210mm; height: 297mm; }
+.a4-print-page.landscape { width: 297mm; height: 210mm; }
+.a4-print-map { position: absolute; inset: 0; }
+.a4-print-title { position: absolute; top: 0; left: 0; right: 0; z-index: 500;
+  background: rgba(255, 255, 255, .86); color: #000; padding: 4mm 6mm;
+  font: 600 13pt system-ui, sans-serif; }
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff; }
+  body > *:not(.a4-print-area) { display: none !important; }
+  .a4-print-area { position: static; left: 0; }
+}
+
 /* settings (Einstellungen) */
 #settings { background: rgba(20, 26, 20, 0.55); padding: 16px; }
 .settings-card { width: min(520px, 96vw); max-height: 90vh; padding: 0; gap: 0; overflow: hidden; }

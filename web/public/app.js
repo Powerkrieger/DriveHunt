@@ -125,23 +125,32 @@ async function reloadHunts() {
 
 // ---------------------------------------------------------------- map
 
+// Base tile layer factory — each map (main + A4 print map) needs its own
+// instance, so this is the single source of the three base maps.
+function createBaseLayer(key) {
+  if (key === 'dop')
+    return L.tileLayer.wms('https://dienste.gdi-sh.de/WMS_SH_DOP20col_OpenGBD', {
+      layers: 'sh_dop20_rgb', format: 'image/jpeg', maxZoom: 20,
+      attribution: 'Luftbild &copy; GeoBasis-DE/LVermGeo SH (CC BY 4.0)',
+    });
+  if (key === 'esri')
+    return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, attribution: 'Tiles &copy; Esri',
+    });
+  return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  });
+}
+// Which base map is currently shown on the main map.
+function activeBaseMapKey() {
+  for (const k of ['osm', 'dop', 'esri']) if (baseLayers && map.hasLayer(baseLayers[k])) return k;
+  return 'osm';
+}
+
 function initMap(geo) {
   map = L.map('map', { zoomControl: true });
 
-  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  });
-  const dop = L.tileLayer.wms('https://dienste.gdi-sh.de/WMS_SH_DOP20col_OpenGBD', {
-    layers: 'sh_dop20_rgb',
-    format: 'image/jpeg',
-    maxZoom: 20,
-    attribution: 'Luftbild &copy; GeoBasis-DE/LVermGeo SH (CC BY 4.0)',
-  });
-  const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: 'Tiles &copy; Esri',
-  });
+  const osm = createBaseLayer('osm'), dop = createBaseLayer('dop'), esri = createBaseLayer('esri');
   baseLayers = { osm, dop, esri };
   setBaseMap(window.Settings?.defaultBaseMap?.() || 'osm');
   layersControl = L.control.layers({ OpenStreetMap: osm, 'Luftbild SH (DOP20)': dop, 'Luftbild Esri': esri }, null, { position: 'topleft' }).addTo(map);
