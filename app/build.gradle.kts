@@ -24,8 +24,24 @@ android {
         buildConfigField("String", "BASE_URL", "\"https://hunting.powerizzle.de/\"")
     }
 
+    signingConfigs {
+        create("release") {
+            // Credentials come from the environment: CI secrets (see
+            // .github/workflows/build.yml), or a local shell export when building
+            // a release by hand. Without them, assembleRelease stays unsigned.
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

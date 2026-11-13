@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Release signing keystore + its env/password files — never commit (kept in KeePass).
+*.jks
+*.env
