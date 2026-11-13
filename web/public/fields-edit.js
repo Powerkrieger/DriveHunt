@@ -22,6 +22,7 @@
   // ------------------------------------------------------------ view
 
   $('edit-fields').addEventListener('click', () => {
+    window.Lock?.release(); // field editing needs field taps
     initGeoman();
     stopSim();
     FieldEdit.selected.clear();

@@ -79,28 +79,15 @@
     else add();
   }
 
-  const LocateControl = L.Control.extend({
-    options: { position: 'topleft' },
-    onAdd() {
-      const bar = L.DomUtil.create('div', 'leaflet-bar locate-control');
-      button = L.DomUtil.create('a', '', bar);
-      button.href = '#';
-      button.title = 'Auf meinen Standort zentrieren';
-      button.textContent = '◎'; // distinct from the 📌 marker button
-      L.DomEvent.disableClickPropagation(bar);
-      L.DomEvent.on(button, 'click', (e) => {
-        L.DomEvent.preventDefault(e);
-        if (lastLatLng) map.setView(lastLatLng, Math.max(map.getZoom(), 16));
-        else startWatch(); // retry if it never started / was blocked
-      });
-      return bar;
-    },
-  });
-
   const wait = setInterval(() => {
     if (typeof map === 'undefined' || !map) return;
     clearInterval(wait);
-    new LocateControl().addTo(map);
+    button = document.getElementById('tb-locate');
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (lastLatLng) map.setView(lastLatLng, Math.max(map.getZoom(), 16));
+      else startWatch(); // retry if it never started / was blocked
+    });
     map.on('locationfound', onFound);
     map.on('locationerror', onError);
     startWatch(); // inherently on

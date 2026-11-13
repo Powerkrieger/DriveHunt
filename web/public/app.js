@@ -148,14 +148,114 @@ function activeBaseMapKey() {
   return 'osm';
 }
 
+// Base maps offered in the toolbar's 🗺️ panel.
+const BASE_MAPS = [['osm', 'OpenStreetMap'], ['dop', 'Luftbild SH (DOP20)'], ['esri', 'Luftbild Esri']];
+
+function renderLayerList(box) {
+  const list = document.createElement('div');
+  list.className = 'tb-layerlist';
+  const sync = () => {
+    const cur = activeBaseMapKey();
+    list.querySelectorAll('button').forEach((b) => {
+      const on = b.dataset.base === cur;
+      b.classList.toggle('active', on);
+      b.querySelector('.chk').textContent = on ? '✓' : '';
+    });
+  };
+  for (const [k, name] of BASE_MAPS) {
+    const b = document.createElement('button');
+    b.dataset.base = k;
+    b.innerHTML = `<span class="chk"></span>${name}`;
+    b.addEventListener('click', () => { setBaseMap(k); sync(); });
+    list.appendChild(b);
+  }
+  box.appendChild(list);
+  sync();
+}
+
+// ---- toolbar extension: the layer chooser and the measure readout slide down
+// as part of the bar (not floating popups). Only one shows at a time; 'layers'
+// is a transient panel the user toggles, 'measure' stays while that tool runs.
+const Ext = {
+  layersOpen: false,
+  render() {
+    const box = $('tb-ext');
+    const want = Ext.layersOpen ? 'layers' : (window.Measure?.active ? 'measure' : null);
+    if (want) {
+      box.innerHTML = '';
+      const inner = document.createElement('div');
+      inner.className = 'tb-ext-inner';
+      box.appendChild(inner); // in the DOM before content renders (measure checks isConnected)
+      if (want === 'layers') renderLayerList(inner);
+      else window.Measure.mount(inner);
+      box.classList.add('open');
+    } else {
+      box.classList.remove('open');
+      setTimeout(() => { if (!box.classList.contains('open')) box.innerHTML = ''; }, 240);
+    }
+    $('tb-layers').classList.toggle('ext-active', Ext.layersOpen);
+  },
+  toggleLayers() { Ext.layersOpen = !Ext.layersOpen; Ext.render(); },
+  closeLayers() { if (Ext.layersOpen) { Ext.layersOpen = false; Ext.render(); } },
+};
+window.Ext = Ext;
+
+// ---- tool coordinator: one map interaction at a time. While a multi-step
+// action is in progress (the ✓/✕ action bar is up — drawing, moving a marker,
+// editing a field) other tools are blocked so the work isn't lost; harmless
+// controls (layers, GPS, zoom) stay available.
+const Tools = {
+  busy: () => !!window.ActionBar?.visible,
+  nudge() {
+    const b = $('action-bar');
+    if (!b || b.classList.contains('hidden')) return;
+    b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge');
+  },
+};
+window.Tools = Tools;
+
+// ---- map lock: freeze all map-feature interaction (field taps, marker popups,
+// long-press add) so the map can be panned and zoomed freely without triggering
+// anything — e.g. holding the phone in the field. Pan + zoom keep working.
+// Starting any drawing / editing tool releases the lock so the toolbar stays
+// usable; locking is blocked while an action is in progress (nudge).
+const Lock = {
+  active: false,
+  toggle() {
+    if (!Lock.active && Tools.busy()) return Tools.nudge();
+    Lock.active ? Lock.release() : Lock.engage();
+  },
+  engage() {
+    window.Measure?.stop?.();
+    window.Markers?.stop?.();
+    Ext.closeLayers();
+    Lock.active = true;
+    Lock.sync();
+  },
+  release() {
+    if (!Lock.active) return;
+    Lock.active = false;
+    Lock.sync();
+  },
+  sync() {
+    document.body.classList.toggle('map-locked', Lock.active);
+    const btn = $('tb-lock');
+    btn.classList.toggle('active', Lock.active);
+    btn.querySelector('.tb-ic').textContent = Lock.active ? '🔒' : '🔓';
+    btn.title = Lock.active ? 'Karte entsperren' : 'Karte sperren – nur verschieben und zoomen';
+    btn.setAttribute('aria-pressed', String(Lock.active));
+  },
+};
+window.Lock = Lock;
+
 function initMap(geo) {
-  map = L.map('map', { zoomControl: true });
+  map = L.map('map', { zoomControl: false });
 
   const osm = createBaseLayer('osm'), dop = createBaseLayer('dop'), esri = createBaseLayer('esri');
   baseLayers = { osm, dop, esri };
   setBaseMap(window.Settings?.defaultBaseMap?.() || 'osm');
-  layersControl = L.control.layers({ OpenStreetMap: osm, 'Luftbild SH (DOP20)': dop, 'Luftbild Esri': esri }, null, { position: 'topleft' }).addTo(map);
-  L.control.scale({ imperial: false }).addTo(map);
+  L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+  map.on('click', () => Ext.closeLayers()); // tapping the map closes the layer panel
 
   // Town limits: orange, not interactive.
   boundaryLayer = L.geoJSON(geo.boundary, {
@@ -482,11 +582,11 @@ function setView(view) {
 // the right (bottom sheet on phones). Any view that needs it opens it.
 function openPanel() {
   $('panel').classList.add('open');
-  $('treiben-open').classList.add('hidden');
+  $('treiben-open').classList.add('active');
 }
 function closePanel() {
   $('panel').classList.remove('open');
-  $('treiben-open').classList.remove('hidden');
+  $('treiben-open').classList.remove('active');
 }
 
 function fitFields(fieldIds) {
@@ -535,7 +635,20 @@ function showFocus(id, fit = true) {
 $('focus-back').addEventListener('click', showList);
 $('panel-close').addEventListener('click', closePanel);
 // 📋 opens the Treiben list; if the panel was left on another view, show the list.
-$('treiben-open').addEventListener('click', () => { openPanel(); if (state.view !== 'list') showList(); });
+$('treiben-open').addEventListener('click', () => {
+  if ($('panel').classList.contains('open')) return closePanel();
+  if (Tools.busy()) return Tools.nudge();
+  window.Measure?.stop?.();
+  Ext.closeLayers();
+  openPanel();
+  if (state.view !== 'list') showList();
+});
+
+// Zoom + layer chooser (harmless, available any time).
+$('tb-zoomin').addEventListener('click', () => map?.zoomIn());
+$('tb-zoomout').addEventListener('click', () => map?.zoomOut());
+$('tb-layers').addEventListener('click', () => Ext.toggleLayers());
+$('tb-lock').addEventListener('click', () => Lock.toggle());
 
 // ---------------------------------------------------------------- editing
 
@@ -553,6 +666,7 @@ $('focus-delete').addEventListener('click', async () => {
 });
 
 function startEdit(draft) {
+  window.Lock?.release(); // editing needs field taps
   stopSim();
   state.draft = draft;
   openPanel();
@@ -661,6 +775,7 @@ $('setup-clear').addEventListener('click', () => {
 });
 
 function onFieldClick(id) {
+  if (window.Lock?.active) return; // map locked: only pan / zoom
   if (exportOpts) return; // frozen as an export preview
   if (window.Measure?.active || window.Sketch?.active || window.Markers?.placing) return; // taps belong to the tool
   if (state.view === 'fields') return window.FieldEdit.onFieldClick(id);

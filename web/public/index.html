@@ -120,10 +120,25 @@
   <div id="app" class="hidden">
     <div id="map"></div>
 
-    <button id="settings-open" class="fab fab-settings" title="Einstellungen" aria-label="Einstellungen">⚙</button>
-    <button id="treiben-open" class="fab fab-treiben" title="Treiben anzeigen">
-      <span class="fab-ic">📋</span><span class="fab-label">Treiben</span>
-    </button>
+    <div id="topbar">
+      <div class="tb-row" role="toolbar" aria-label="Werkzeuge">
+        <button id="treiben-open" class="tb-btn" title="Treiben anzeigen" aria-label="Treiben"><span class="tb-ic">📋</span></button>
+        <button id="tb-layers" class="tb-btn" title="Hintergrundkarte wählen" aria-label="Karte"><span class="tb-ic">🗺️</span></button>
+        <button id="tb-markers" class="tb-btn" title="Markierungen groß / klein" aria-label="Markierungen"><span class="tb-ic">📌</span></button>
+        <button id="tb-measure" class="tb-btn" title="Messen (Strecke / Fläche)" aria-label="Messen"><span class="tb-ic">📏</span></button>
+        <button id="tb-locate" class="tb-btn" title="Auf meinen Standort zentrieren" aria-label="Standort">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+        </button>
+        <span class="tb-spacer"></span>
+        <button id="tb-lock" class="tb-btn" title="Karte sperren – nur verschieben und zoomen" aria-label="Karte sperren" aria-pressed="false"><span class="tb-ic">🔓</span></button>
+        <button id="tb-zoomout" class="tb-btn tb-zoom" title="Verkleinern" aria-label="Verkleinern">−</button>
+        <button id="tb-zoomin" class="tb-btn tb-zoom" title="Vergrößern" aria-label="Vergrößern">+</button>
+        <button id="settings-open" class="tb-btn" title="Einstellungen" aria-label="Einstellungen">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+        </button>
+      </div>
+      <div id="tb-ext"></div>
+    </div>
 
     <aside id="panel">
       <header>

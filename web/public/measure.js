@@ -43,6 +43,7 @@
     }
     for (const p of pts) L.circleMarker(p, { radius: 5, color: '#000', weight: 2, fillColor: '#ffeb3b', fillOpacity: 1, interactive: false }).addTo(layer);
 
+    if (!panel || !panel.isConnected) return; // readout not currently shown in the toolbar
     panel.innerHTML = `
       <div><b>Strecke:</b> ${pts.length > 1 ? fmtDist(total) : '–'}</div>
       ${pts.length >= 3 ? `<div><b>Fläche:</b> ${fmtArea(areaM2(pts))}</div>` : ''}
@@ -56,8 +57,25 @@
 
   Measure.stop = () => Measure.active && setActive(false);
 
+  // Called by the toolbar extension (Ext) to render the readout inside the bar.
+  Measure.mount = function (container) {
+    panel = document.createElement('div');
+    panel.className = 'measure-panel';
+    panel.addEventListener('click', (e) => {
+      const act = e.target.dataset?.act;
+      if (act === 'undo') Measure.points.pop();
+      if (act === 'clear') Measure.points = [];
+      if (act === 'close') return setActive(false);
+      draw();
+    });
+    container.appendChild(panel);
+    draw();
+  };
+
   function setActive(on) {
     if (on) {
+      if (window.Tools?.busy?.()) return window.Tools.nudge(); // don't interrupt an action in progress
+      window.Lock?.release(); // measuring needs map taps
       // Only one tool / modal at a time.
       window.Markers?.stop?.();
       window.Sketch?.cancel?.(true);
@@ -66,45 +84,22 @@
     Measure.active = on;
     Measure.points = [];
     button.classList.toggle('active', on);
-    panel.classList.toggle('hidden', !on);
     document.body.classList.toggle('picking', on || !!window.Sketch?.active || !!window.FieldEdit?.tool);
     on ? map.doubleClickZoom.disable() : map.doubleClickZoom.enable();
-    if (on) draw();
-    else layer.clearLayers();
+    if (!on) { layer.clearLayers(); panel = null; }
+    window.Ext?.render(); // slide the readout in (on) or collapse the extension (off)
   }
-
-  const MeasureControl = L.Control.extend({
-    options: { position: 'topleft' },
-    onAdd() {
-      const box = L.DomUtil.create('div', 'measure-control');
-      const bar = L.DomUtil.create('div', 'leaflet-bar', box);
-      button = L.DomUtil.create('a', '', bar);
-      button.href = '#';
-      button.title = 'Messen (Strecke / Fläche)';
-      button.textContent = '📏';
-      panel = L.DomUtil.create('div', 'measure-panel hidden', box);
-      L.DomEvent.disableClickPropagation(box);
-      L.DomEvent.on(button, 'click', (e) => {
-        L.DomEvent.preventDefault(e);
-        setActive(!Measure.active);
-      });
-      L.DomEvent.on(panel, 'click', (e) => {
-        const act = e.target.dataset?.act;
-        if (act === 'undo') Measure.points.pop();
-        if (act === 'clear') Measure.points = [];
-        if (act === 'close') return setActive(false);
-        draw();
-      });
-      return box;
-    },
-  });
 
   // The map is created in app.js after login; hook in once it exists.
   const wait = setInterval(() => {
     if (typeof map === 'undefined' || !map) return;
     clearInterval(wait);
     layer = L.layerGroup().addTo(map);
-    new MeasureControl().addTo(map);
+    button = document.getElementById('tb-measure');
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      setActive(!Measure.active);
+    });
     map.on('click', (e) => {
       if (!Measure.active) return;
       Measure.points.push([e.latlng.lat, e.latlng.lng]);

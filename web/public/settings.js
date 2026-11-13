@@ -101,10 +101,10 @@
   }
 
   function open() {
+    if (window.Tools?.busy?.()) return window.Tools.nudge(); // finish/cancel the current action first
     // Only one tool / modal at a time (mirrors todos.js).
-    window.Markers?.stop?.();
     window.Measure?.stop?.();
-    window.Sketch?.cancel?.(true);
+    window.Ext?.closeLayers?.();
     window.Todos && document.getElementById('todos').classList.add('hidden');
     fillForm();
     $('pw-msg').textContent = '';

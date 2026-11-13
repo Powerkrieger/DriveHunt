@@ -101,6 +101,7 @@
    * opts: { kind: 'line'|'polygon', color, arrow, min, texts: [first, more], snap, onDone(points), onCancel() }
    */
   Sketch.start = function (opts) {
+    window.Lock?.release(); // drawing needs map taps + draggable handles
     Sketch.cancel(true);
     layer ||= L.layerGroup().addTo(map);
     Sketch.active = { ...opts, points: opts.points ? opts.points.slice() : [] };
