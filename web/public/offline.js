@@ -49,8 +49,10 @@
       while (i < urls.length && !cancelled()) {
         const url = urls[i++];
         try {
-          // The service worker intercepts this and stores it in the tile cache.
-          await fetch(url, { mode: 'no-cors', cache: 'no-cache' });
+          // CORS (default mode), not no-cors: the servers send the headers, so the
+          // service worker caches a non-opaque response accounted at its true size
+          // (~25 KB) instead of the ~7 MB padding applied to opaque responses.
+          await fetch(url, { cache: 'no-cache' });
         } catch {
           failed++;
         }

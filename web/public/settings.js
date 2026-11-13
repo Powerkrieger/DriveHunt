@@ -7,7 +7,7 @@
 
 (function () {
   const KEY = 'dh.settings';
-  const TILE_CACHE = 'dh-tiles-v1'; // keep in sync with sw.js
+  const TILE_CACHE = 'dh-tiles-v2'; // keep in sync with sw.js
   const DEFAULTS = {
     baseMap: 'osm',
     theme: 'system', // system | light | dark

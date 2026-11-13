@@ -129,17 +129,21 @@ async function reloadHunts() {
 // Base tile layer factory — each map (main + A4 print map) needs its own
 // instance, so this is the single source of the three base maps.
 function createBaseLayer(key) {
+  // crossOrigin: request tiles with CORS (all three servers send the headers) so
+  // the service worker stores non-opaque responses. Opaque (no-cors) responses
+  // are padded to ~7 MB each in the browser's storage accounting, which made the
+  // offline cache look like tens of GB and could blow the storage quota.
   if (key === 'dop')
     return L.tileLayer.wms('https://dienste.gdi-sh.de/WMS_SH_DOP20col_OpenGBD', {
-      layers: 'sh_dop20_rgb', format: 'image/jpeg', maxZoom: 20,
+      layers: 'sh_dop20_rgb', format: 'image/jpeg', maxZoom: 20, crossOrigin: true,
       attribution: 'Luftbild &copy; GeoBasis-DE/LVermGeo SH (CC BY 4.0)',
     });
   if (key === 'esri')
     return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19, attribution: 'Tiles &copy; Esri',
+      maxZoom: 19, crossOrigin: true, attribution: 'Tiles &copy; Esri',
     });
   return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19, crossOrigin: true, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   });
 }
 // Which base map is currently shown on the main map.
