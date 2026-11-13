@@ -425,6 +425,7 @@ app.delete('/api/hunts/:id', requireEditor, (req, res) => {
 
 const vendor = (url, dir) => app.use(url, express.static(path.join(__dirname, '..', 'node_modules', dir)));
 vendor('/vendor/leaflet', 'leaflet/dist');
+vendor('/vendor/leaflet-rotate', 'leaflet-rotate/dist');
 vendor('/vendor/geoman', '@geoman-io/leaflet-geoman-free/dist');
 vendor('/vendor/polygon-clipping', 'polygon-clipping/dist');
 app.use(express.static(path.join(__dirname, '..', 'public')));

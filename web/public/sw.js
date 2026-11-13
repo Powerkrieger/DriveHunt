@@ -13,7 +13,7 @@
  *  - /api/events (SSE) and every non-GET request are never touched.
  */
 
-const SHELL = 'dh-shell-v8';
+const SHELL = 'dh-shell-v9';
 const DATA = 'dh-data-v1';
 const TILES = 'dh-tiles-v1';
 const KEEP = new Set([SHELL, DATA, TILES]);
@@ -24,6 +24,7 @@ const SHELL_ASSETS = [
   '/markers.js', '/todos.js', '/measure.js', '/locate.js', '/fields-edit.js', '/offline.js',
   '/icon.svg', '/manifest.webmanifest',
   '/vendor/leaflet/leaflet.css', '/vendor/leaflet/leaflet.js',
+  '/vendor/leaflet-rotate/leaflet-rotate.js',
   '/vendor/leaflet/images/layers.png', '/vendor/leaflet/images/layers-2x.png',
   '/vendor/leaflet/images/marker-icon.png', '/vendor/leaflet/images/marker-icon-2x.png',
   '/vendor/leaflet/images/marker-shadow.png',

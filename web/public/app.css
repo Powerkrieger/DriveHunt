@@ -123,6 +123,7 @@ label { display: block; font-size: 13px; color: var(--text-hint); margin: 6px 0;
 #tb-locate.active { background: #bbdefb; box-shadow: none; }
 .tb-zoom { font-size: 25px; font-weight: 600; }
 .tb-ic { pointer-events: none; }
+.compass-ic { pointer-events: none; transform-origin: 50% 50%; transition: transform .12s ease; }
 
 /* the sliding extension area under the button row */
 #tb-ext { max-height: 0; overflow: hidden; transition: max-height .22s ease; }

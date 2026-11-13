@@ -25,7 +25,8 @@
     const el = cone.getElement();
     if (el) {
       el.style.visibility = heading == null ? 'hidden' : 'visible';
-      if (heading != null) el.querySelector('i').style.transform = `rotate(${heading}deg)`;
+      // Subtract the map's rotation so the cone keeps pointing the real-world way.
+      if (heading != null) el.querySelector('i').style.transform = `rotate(${heading - (map.getBearing?.() || 0)}deg)`;
     }
   }
 
@@ -90,6 +91,7 @@
     });
     map.on('locationfound', onFound);
     map.on('locationerror', onError);
+    map.on('rotate', render); // re-aim the heading cone when the map turns
     startWatch(); // inherently on
     startCompass();
   }, 200);

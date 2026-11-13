@@ -129,6 +129,13 @@
         <button id="tb-locate" class="tb-btn" title="Auf meinen Standort zentrieren" aria-label="Standort">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
         </button>
+        <button id="tb-compass" class="tb-btn hidden" title="Karte nach Norden ausrichten" aria-label="Nach Norden ausrichten">
+          <svg class="compass-ic" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path fill="#e53935" d="M12 3.5 9 12h6z"/>
+            <path fill="currentColor" opacity="0.55" d="M12 20.5 9 12h6z"/>
+            <text x="12" y="2.6" text-anchor="middle" font-size="3.2" fill="currentColor" font-weight="700">N</text>
+          </svg>
+        </button>
         <span class="tb-spacer"></span>
         <button id="tb-lock" class="tb-btn" title="Karte sperren – nur verschieben und zoomen" aria-label="Karte sperren" aria-pressed="false"><span class="tb-ic">🔓</span></button>
         <button id="tb-zoomout" class="tb-btn tb-zoom" title="Verkleinern" aria-label="Verkleinern">−</button>
@@ -278,6 +285,7 @@
   </div>
 
   <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/vendor/leaflet-rotate/leaflet-rotate.js"></script>
   <script src="/vendor/geoman/leaflet-geoman.min.js"></script>
   <script src="/vendor/polygon-clipping/polygon-clipping.umd.min.js"></script>
   <script src="/sim.js"></script>

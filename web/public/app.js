@@ -248,8 +248,29 @@ const Lock = {
 };
 window.Lock = Lock;
 
+// Keep the toolbar compass in sync with the map's rotation: it hides at due
+// north and otherwise shows, with its needle pointing to geographic north.
+function syncCompass() {
+  const btn = $('tb-compass');
+  if (!btn || !map?.getBearing) return;
+  const b = map.getBearing() || 0;
+  const north = ((Math.round(b) % 360) + 360) % 360 === 0;
+  btn.classList.toggle('hidden', north);
+  btn.querySelector('.compass-ic').style.transform = `rotate(${-b}deg)`;
+}
+
 function initMap(geo) {
-  map = L.map('map', { zoomControl: false });
+  // rotate: two-finger twist on touch, Shift+drag on desktop. We supply our own
+  // compass button (toolbar) instead of the plugin's floating control.
+  map = L.map('map', {
+    zoomControl: false,
+    rotate: true,
+    touchRotate: true,
+    shiftKeyRotate: true,
+    rotateControl: false,
+    bearing: 0,
+  });
+  map.on('rotate', syncCompass);
 
   const osm = createBaseLayer('osm'), dop = createBaseLayer('dop'), esri = createBaseLayer('esri');
   baseLayers = { osm, dop, esri };
@@ -391,7 +412,10 @@ function render() {
 // options via setExportMode(); print uses the same options.
 function setExportMode(opts) {
   exportOpts = opts;
-  if (opts) render();
+  if (opts) {
+    map?.setBearing?.(0); // the A4 viewfinder frame is axis-aligned; export north-up
+    render();
+  }
 }
 
 // Driver chain + driver/stander dots at the start of the drive (the simulation's
@@ -649,6 +673,7 @@ $('tb-zoomin').addEventListener('click', () => map?.zoomIn());
 $('tb-zoomout').addEventListener('click', () => map?.zoomOut());
 $('tb-layers').addEventListener('click', () => Ext.toggleLayers());
 $('tb-lock').addEventListener('click', () => Lock.toggle());
+$('tb-compass').addEventListener('click', () => map?.setBearing?.(0));
 
 // ---------------------------------------------------------------- editing
 

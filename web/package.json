@@ -1,6 +1,6 @@
 {
   "name": "drivehunt-web",
-  "description": "Dr\u00fcckjagd-Planung H\u00f6gel",
+  "description": "Drückjagd-Planung Högel",
   "main": "server/index.js",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",
@@ -13,6 +13,7 @@
     "@geoman-io/leaflet-geoman-free": "^2.20.2",
     "express": "^5.2.1",
     "leaflet": "^1.9.4",
+    "leaflet-rotate": "^0.2.8",
     "polygon-clipping": "^0.15.7"
   },
   "devDependencies": {
