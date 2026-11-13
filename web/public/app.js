@@ -264,14 +264,18 @@ function syncCompass() {
 }
 
 function initMap(geo) {
-  // rotate: two-finger twist on touch, Shift+drag on desktop. We supply our own
-  // compass button (toolbar) instead of the plugin's floating control.
+  // rotate: two-finger twist on touch, Shift+drag on desktop; the compass button
+  // resets to north. zoomAnimation is OFF on purpose — the plugin's animated zoom
+  // fights the rotated pane (it reset the bearing and made the SVG field overlays
+  // jump/misalign during zoom). The instant path keeps overlays glued to the map
+  // through both zoom and turn.
   map = L.map('map', {
     zoomControl: false,
     rotate: true,
     touchRotate: true,
     shiftKeyRotate: true,
     rotateControl: false,
+    zoomAnimation: false,
     bearing: 0,
   });
   map.on('rotate', syncCompass);

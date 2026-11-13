@@ -13,7 +13,7 @@
  *  - /api/events (SSE) and every non-GET request are never touched.
  */
 
-const SHELL = 'dh-shell-v10';
+const SHELL = 'dh-shell-v11';
 const DATA = 'dh-data-v1';
 const TILES = 'dh-tiles-v2'; // v2: old cache held padded opaque tiles; purge + re-cache as CORS
 const KEEP = new Set([SHELL, DATA, TILES]);
